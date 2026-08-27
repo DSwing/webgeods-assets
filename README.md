@@ -18,7 +18,17 @@ change or disappear without notice.
   downloading each one, not estimated); `pyodide-lock.json` itself is
   the complete upstream index, so adding another package later is just
   dropping its wheel in this same folder, no lock-file editing needed.
-- `webr/` — (planned) WebR core + R packages, same rationale.
+- `webr/v0.6.0/` — WebR core (`webr.mjs`, `webr-worker.js`, `R.js/.wasm`,
+  `libRblas.so`, `libRlapack.so`) plus the `vfs/` lazy-loaded library data
+  files webR itself requests at runtime (locale/translation data, proj/
+  udunits data needed by spatial packages, grDevices font metrics) —
+  mirrors webR's `baseUrl` option target 1:1, captured from real network
+  requests, not guessed.
+- `webr/repo/` — mirrors webR's `repoUrl` option target: `PACKAGES.rds`
+  plus the full dependency closure for `sf` + `geojsonsf` (13 packages —
+  sf, geojsonsf, units, s2, wk, classInt, e1071, proxy, class, MASS, DBI,
+  Rcpp, KernSmooth), laid out under `bin/emscripten/contrib/4.6/` to match
+  webR v0.6.0's own R/emscripten ABI path exactly.
 
 Files are fetched by the `WebGeoDS.Runtime`/`WebGeoDS.Python`/`WebGeoDS.R`
 JS modules in the main [webgeods](https://github.com/DSwing) project by
