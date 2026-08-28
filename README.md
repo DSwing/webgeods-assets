@@ -32,6 +32,13 @@ change or disappear without notice.
   (underscore) silently failed to match the lock file's `pydantic-core`
   (hyphen) key and was dropped with no warning — caught by diffing
   against a real `micropip.install("maplibre")` network capture.
+  Also includes `rasterio` (Python's closest equivalent to R's `terra`:
+  raster I/O and analysis, same underlying GDAL engine) + `affine` (its
+  only genuinely new dependency — the rest of its closure, numpy/click/
+  attrs/certifi/cligj/six, was already vendored via geopandas). Added
+  specifically to compare load cost against `terra` on equal footing
+  (own vendored host, not a CDN) — see the webgeods project's own notes
+  for the resulting numbers.
 - `webr/v0.6.0/` — WebR core (`webr.mjs`, `webr-worker.js`, `R.js/.wasm`,
   `libRblas.so`, `libRlapack.so`) plus the `vfs/` lazy-loaded library data
   files webR itself requests at runtime (locale/translation data, proj/
