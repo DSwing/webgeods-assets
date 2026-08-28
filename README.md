@@ -18,6 +18,20 @@ change or disappear without notice.
   downloading each one, not estimated); `pyodide-lock.json` itself is
   the complete upstream index, so adding another package later is just
   dropping its wheel in this same folder, no lock-file editing needed.
+  Also includes `jinja2`, `pydantic`, `pydantic_core`, `markupsafe`,
+  `typing_extensions`, `typing_inspection`, `annotated_types` (Pyodide's
+  own index, resolved via `resolve-py-deps.mjs` alongside geopandas) and
+  `micropip` itself, plus three wheels NOT in Pyodide's index — fetched
+  directly from PyPI and vendored here since micropip has no local-index
+  entry for them: `maplibre-0.3.6`, `branca-0.8.2`,
+  `eval_type_backport-0.4.0` (the Python↔MapLibre bridge — see
+  shared/python.js's MICROPIP_PACKAGES and shared/map.js's
+  `WebGeoDS.Map.fromPython()`). `resolve-py-deps.mjs` had its own bug
+  fixed alongside this addition: it compared package names without PEP
+  503 normalization, so `pydantic`'s dependency on `pydantic_core`
+  (underscore) silently failed to match the lock file's `pydantic-core`
+  (hyphen) key and was dropped with no warning — caught by diffing
+  against a real `micropip.install("maplibre")` network capture.
 - `webr/v0.6.0/` — WebR core (`webr.mjs`, `webr-worker.js`, `R.js/.wasm`,
   `libRblas.so`, `libRlapack.so`) plus the `vfs/` lazy-loaded library data
   files webR itself requests at runtime (locale/translation data, proj/
