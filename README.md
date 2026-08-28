@@ -23,12 +23,33 @@ change or disappear without notice.
   files webR itself requests at runtime (locale/translation data, proj/
   udunits data needed by spatial packages, grDevices font metrics) —
   mirrors webR's `baseUrl` option target 1:1, captured from real network
-  requests, not guessed.
+  requests, not guessed. **Not currently used by the site** (see v0.4.3
+  below) — kept vendored in case v0.6.0 becomes usable again.
+- `webr/v0.4.3/` — same core file set, for webR v0.4.3 (R 4.4.2). This is
+  the version the site actually points `baseUrl` at. Pinned here instead
+  of the newer v0.6.0 because `terra` (a hard `Imports` of `mapgl`) fails
+  to load its namespace on webR 0.6.0/0.5.4 — open upstream bug
+  r-wasm/webr#621 (terra 1.9-27 imports 18 additional PROJ symbols that
+  don't resolve in that WASM binding; terra 1.8-42, what 0.4.3 installs,
+  is unaffected). Revert to a newer webR once that issue is closed.
 - `webr/repo/` — mirrors webR's `repoUrl` option target: `PACKAGES.rds`
-  plus the full dependency closure for `sf` + `geojsonsf` (13 packages —
-  sf, geojsonsf, units, s2, wk, classInt, e1071, proxy, class, MASS, DBI,
-  Rcpp, KernSmooth), laid out under `bin/emscripten/contrib/4.6/` to match
-  webR v0.6.0's own R/emscripten ABI path exactly.
+  plus R package closures, one per R/emscripten ABI path:
+  - `bin/emscripten/contrib/4.6/` (R 4.6.0, for v0.6.0) — `sf` +
+    `geojsonsf` closure, 13 packages: sf, geojsonsf, units, s2, wk,
+    classInt, e1071, proxy, class, MASS, DBI, Rcpp, KernSmooth.
+  - `bin/emscripten/contrib/4.4/` (R 4.4.2, for v0.4.3, **currently
+    used**) — `sf` + `geojsonsf` + `mapgl` closure, 52 packages. Notably
+    does NOT include `webr` as a downloadable package: the webR-patched
+    `httpuv` lists `webr` in `Imports`, but that's webR's own JS-interop
+    shim (`Remotes: webr=github::r-wasm/webr/packages/webr` in its
+    DESCRIPTION) — baked into every R.wasm image at build time, not the
+    unrelated CRAN package of the same name. `resolve-r-deps.R` treats
+    `webr` as always-present for this reason (see its comments) — an
+    earlier version of that script got this wrong and produced a
+    154-package closure by resolving `webr` against the CRAN-mirrored
+    package instead, pulling in moonBook/car/lme4/forecast/etc.
+    Verified against a real network capture of `webr.installPackages()`,
+    which never fetches a `webr_*.tgz`.
 
 Files are fetched by the `WebGeoDS.Runtime`/`WebGeoDS.Python`/`WebGeoDS.R`
 JS modules in the main [webgeods](https://github.com/DSwing) project by
