@@ -26,7 +26,7 @@ change or disappear without notice.
   entry for them: `maplibre-0.3.6`, `branca-0.8.2`,
   `eval_type_backport-0.4.0` (the Python↔MapLibre bridge — see
   shared/python.js's MICROPIP_PACKAGES and shared/map.js's
-  `WebGeoDS.Map.fromPython()`). `resolve-py-deps.mjs` had its own bug
+  `WebGeoDS.Map.fromQueue()`). `resolve-py-deps.mjs` had its own bug
   fixed alongside this addition: it compared package names without PEP
   503 normalization, so `pydantic`'s dependency on `pydantic_core`
   (underscore) silently failed to match the lock file's `pydantic-core`
@@ -41,29 +41,39 @@ change or disappear without notice.
   below) — kept vendored in case v0.6.0 becomes usable again.
 - `webr/v0.4.3/` — same core file set, for webR v0.4.3 (R 4.4.2). This is
   the version the site actually points `baseUrl` at. Pinned here instead
-  of the newer v0.6.0 because `terra` (a hard `Imports` of `mapgl`) fails
-  to load its namespace on webR 0.6.0/0.5.4 — open upstream bug
-  r-wasm/webr#621 (terra 1.9-27 imports 18 additional PROJ symbols that
-  don't resolve in that WASM binding; terra 1.8-42, what 0.4.3 installs,
-  is unaffected). Revert to a newer webR once that issue is closed.
+  of the newer v0.6.0 because `terra` fails to load its namespace on
+  webR 0.6.0/0.5.4 — open upstream bug r-wasm/webr#621 (terra 1.9-27
+  imports 18 additional PROJ symbols that don't resolve in that WASM
+  binding; terra 1.8-42, what 0.4.3 installs, is unaffected). Revert to
+  a newer webR once that issue is closed.
 - `webr/repo/` — mirrors webR's `repoUrl` option target: `PACKAGES.rds`
   plus R package closures, one per R/emscripten ABI path:
   - `bin/emscripten/contrib/4.6/` (R 4.6.0, for v0.6.0) — `sf` +
     `geojsonsf` closure, 13 packages: sf, geojsonsf, units, s2, wk,
     classInt, e1071, proxy, class, MASS, DBI, Rcpp, KernSmooth.
   - `bin/emscripten/contrib/4.4/` (R 4.4.2, for v0.4.3, **currently
-    used**) — `sf` + `geojsonsf` + `mapgl` closure, 52 packages. Notably
-    does NOT include `webr` as a downloadable package: the webR-patched
-    `httpuv` lists `webr` in `Imports`, but that's webR's own JS-interop
-    shim (`Remotes: webr=github::r-wasm/webr/packages/webr` in its
-    DESCRIPTION) — baked into every R.wasm image at build time, not the
-    unrelated CRAN package of the same name. `resolve-r-deps.R` treats
-    `webr` as always-present for this reason (see its comments) — an
-    earlier version of that script got this wrong and produced a
-    154-package closure by resolving `webr` against the CRAN-mirrored
-    package instead, pulling in moonBook/car/lme4/forecast/etc.
-    Verified against a real network capture of `webr.installPackages()`,
-    which never fetches a `webr_*.tgz`.
+    used**) — `sf` + `geojsonsf` + `terra` closure, 15 packages: the 13
+    above plus `terra` and `magrittr`. Previously also carried a
+    `mapgl` (Kyle Walker's R MapLibre bindings) closure of 52 packages,
+    for an R↔MapLibre bridge that hijacked mapgl's htmlwidget internals
+    to update a `WebGeoDS.Map` instance directly — removed after
+    measuring the real cost: `library(mapgl)` alone took ~69s (WASM
+    module loading for terra/shiny/bslib/rmarkdown, all namespace-load
+    dependencies of mapgl regardless of which functions are actually
+    called), ~120s and 67MB total on first use. A trimmed mapgl fork
+    was investigated and ruled out empirically, not assumed: webR's
+    `install.packages()` rejects a locally-built Windows binary
+    outright, and has no source-install support at all — producing a
+    working webR .tgz needs the real r-wasm build toolchain. Replaced
+    by a small set of pure-R functions (`webgeods_map()`,
+    `webgeods_add_source()`, ... — see shared/r.js's R_MAP_PRELUDE)
+    mirroring the Python bridge's maplibre.Map design: same
+    {mapOptions, calls} shape, so `WebGeoDS.Map.fromQueue()` — renamed
+    from `fromPython()`, now shared by both — works for either
+    language unchanged. `terra` itself stays vendored: it was the
+    original reason for pinning webR to v0.4.3, independent of the
+    mapgl bridge, and remains available to any R cell via
+    `#| package: terra`.
 
 Files are fetched by the `WebGeoDS.Runtime`/`WebGeoDS.Python`/`WebGeoDS.R`
 JS modules in the main [webgeods](https://github.com/DSwing) project by
