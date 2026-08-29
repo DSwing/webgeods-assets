@@ -63,9 +63,12 @@ change or disappear without notice.
     `geojsonsf` closure, 13 packages: sf, geojsonsf, units, s2, wk,
     classInt, e1071, proxy, class, MASS, DBI, Rcpp, KernSmooth.
   - `bin/emscripten/contrib/4.4/` (R 4.4.2, for v0.4.3, **currently
-    used**) — `sf` + `geojsonsf` + `terra` + `stars` closure, 18
-    packages: the 13 above plus `terra`, `magrittr`, `abind`, `rlang`,
-    and `stars` itself. `stars` (Edzer Pebesma, same author as `sf`) was
+    used**) — `sf` + `geojsonsf` + `terra` + `stars` + `jsonlite`
+    closure, 19 packages: the 13 above plus `terra`, `magrittr`,
+    `abind`, `rlang`, `stars`, and `jsonlite` (zero new transitive
+    deps — needed to parse `geojsonsf`-produced GeoJSON strings back
+    into nested R lists, e.g. for `webgeods_add_source()`, which needs
+    a plain list, not a string). `stars` (Edzer Pebesma, same author as `sf`) was
     added as a candidate alternative to `terra` for raster work: it has
     `NeedsCompilation: no` (pure R, reuses `sf`'s own GDAL/GEOS bindings
     instead of a separate compiled raster engine) — only 3 new wheels
