@@ -39,6 +39,10 @@ change or disappear without notice.
   specifically to compare load cost against `terra` on equal footing
   (own vendored host, not a CDN) — see the webgeods project's own notes
   for the resulting numbers.
+  Also includes `xarray` (labelled multi-dimensional arrays / data
+  cubes — the Python analogue of R's `stars`, see below). Pure Python
+  wheel, no new dependencies: its own closure (`numpy`, `packaging`,
+  `pandas`) was already fully vendored via `geopandas`.
 - `webr/v0.6.0/` — WebR core (`webr.mjs`, `webr-worker.js`, `R.js/.wasm`,
   `libRblas.so`, `libRlapack.so`) plus the `vfs/` lazy-loaded library data
   files webR itself requests at runtime (locale/translation data, proj/
@@ -59,8 +63,15 @@ change or disappear without notice.
     `geojsonsf` closure, 13 packages: sf, geojsonsf, units, s2, wk,
     classInt, e1071, proxy, class, MASS, DBI, Rcpp, KernSmooth.
   - `bin/emscripten/contrib/4.4/` (R 4.4.2, for v0.4.3, **currently
-    used**) — `sf` + `geojsonsf` + `terra` closure, 15 packages: the 13
-    above plus `terra` and `magrittr`. Previously also carried a
+    used**) — `sf` + `geojsonsf` + `terra` + `stars` closure, 18
+    packages: the 13 above plus `terra`, `magrittr`, `abind`, `rlang`,
+    and `stars` itself. `stars` (Edzer Pebesma, same author as `sf`) was
+    added as a candidate alternative to `terra` for raster work: it has
+    `NeedsCompilation: no` (pure R, reuses `sf`'s own GDAL/GEOS bindings
+    instead of a separate compiled raster engine) — only 3 new wheels
+    needed (`abind`, `rlang`, `stars`), everything else in its closure
+    was already vendored for `sf`. See the webgeods project's own notes
+    for its measured load cost against `terra`. Previously also carried a
     `mapgl` (Kyle Walker's R MapLibre bindings) closure of 52 packages,
     for an R↔MapLibre bridge that hijacked mapgl's htmlwidget internals
     to update a `WebGeoDS.Map` instance directly — removed after
